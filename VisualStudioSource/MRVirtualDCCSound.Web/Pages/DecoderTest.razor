@@ -1,0 +1,96 @@
+﻿@page "/decodertest/{Id:int}"
+<PageTitle>Test Decoder</PageTitle>
+
+@using MRVirtualDCCSound.Core
+@inject RosterCollection roster
+@inject NavigationManager navmgr
+
+<h1>Test Decoder</h1>
+<h1>Address Id: @Id</h1>
+
+@if (decoder == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Speed</th>
+                <th>Effects</th>
+                <th>Test</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                    <td><input type="text" @bind="@decoder.Id"></td>
+                    <td><input type="range" min="0" max="255" step="1" value="@decoder.LastSpeedStep" @oninput="@((args) => SetSpeed(Convert.ToByte(args.Value)))" /></td>
+                    <td><button class="btn btn-secondary" @onclick="Whistle">Whistle</button>
+                        <button class="btn btn-secondary" @onclick="Buffer">Buffer</button>
+                        <button class="btn btn-secondary" @onclick="Buffer">Couple</button>
+                        <button class="btn btn-secondary" @onclick="Buffer">Flange Squeal</button>
+                    </td>
+                <td><button class="btn btn-secondary" @onclick="TestLoopAsync">Run Test Loop</button></td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-primary" @onclick="Cancel">Back</button>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+    private MobileSFXBase decoder;
+    private string errormessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        decoder = roster.Where(x => x.Id == Id).FirstOrDefault();
+        // soundFolders = Directory.EnumerateDirectories(MRVirtualDCCSound.ervice.MySingletonDCCSystem.SoundFolders).ToList();
+    }
+    protected void Whistle()
+    {
+        decoder.BlowWhistle();
+    }
+    protected void Buffer()
+    {
+        decoder.BufferClank();
+    }
+
+    protected async Task TestLoopAsync()
+    {
+       await decoder.TestLoopAsync();
+    }
+    private byte _lastSpeed;
+    protected async Task SetSpeed(byte speed)
+    {
+        var lastSpeed = Convert.ToInt32(decoder.LastSpeedStep);
+        var newSpeed = Convert.ToInt32(speed);
+        var steps = newSpeed - lastSpeed;
+        if (steps < 0)
+        {
+            for (int i = lastSpeed; i >= newSpeed; i = i - 5)
+            {
+                decoder.SetSpeed(Convert.ToByte(i));
+                await Task.Delay(10);
+            }
+        }
+        else
+        {
+            for (int i = lastSpeed; i <= newSpeed; i= i + 5)
+            {
+                decoder.SetSpeed(Convert.ToByte(i));
+                await Task.Delay(10);
+            }
+        }
+    }
+
+    protected void Cancel()
+    {
+        
+        navmgr.NavigateTo("roster");
+    }
+}

@@ -1,0 +1,88 @@
+﻿@page "/settings"
+<PageTitle>System Settings</PageTitle>
+
+@using MRVirtualDCCSound.Core
+@inject Core.IStorageRepository<GlobalSettings> storage;
+@inject NavigationManager navmgr;
+@inject SerialConnectionHelper sch;
+@inject DCCArduinoSerialProvider da;
+
+<h1>Global Settings</h1>
+
+@if (sc == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @errormessage
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Setting</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sounds Folder</td>
+                <td><input type="text" @bind="@gs.SoundsFolder"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Setting</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>            
+            <tr>
+                <td>Baud</td>
+                <td><input type="number" @bind="@sc.Baud"></td>
+            </tr>
+            <tr>
+                <td>DataBits</td>
+                <td><input type="number" @bind="@sc.Databits"></td>
+            </tr>
+            <tr>
+                <td>PortName</td>
+                <td><input type="text" @bind="@sc.PortName"></td>
+            </tr>
+            <tr>
+                <td>RTS Enabled</td>
+                <td><input type="checkbox" @bind="@sc.RtsEnabled"></td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-primary" @onclick="Save">Save</button>
+}
+
+@code {
+
+
+    private GlobalSettings gs;
+    private SerialConnectionSettings sc;
+    private string errormessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        gs = storage.Read();
+        sc = gs.ConnectionSettings;
+    }
+    protected void Save()
+    {
+        try
+        {
+            storage.Write(gs);
+            sch.Initialize(sc);
+            //da.SerialConnectionHelper = sch;
+            navmgr.NavigateTo("/");
+        }catch(Exception ex)
+        {
+            errormessage = ex.ToString();
+        }
+    }
+}

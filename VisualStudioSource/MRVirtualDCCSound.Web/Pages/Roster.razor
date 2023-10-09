@@ -1,0 +1,70 @@
+﻿@page "/roster"
+<PageTitle>Roster</PageTitle>
+
+@using MRVirtualDCCSound.Core
+@inject RosterCollection roster
+
+@if (decoders == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Notes</th>
+                <th>Max RPM</th>
+                <th>Speed</th>
+                <th>SoundFolder</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var decoder in decoders)
+            {
+                <tr>
+                    <td>@decoder.Id</td>
+                    <td>@decoder.Notes</td>
+                    <td>@decoder.MaxRPM</td>
+                    <td>@(decoder.DirectionReversed?"REV":"FWD") @decoder.LastSpeedStep</td>
+                    <td>@decoder.SoundsFolder</td>
+                     <td>
+                        <NavLink href="@("decoderEdit\\" + decoder.Id)" target="_blank">Edit</NavLink>
+                        <NavLink href="@("decoderTest\\" + decoder.Id)" target="_blank">Test</NavLink>
+                        <NavLink href="@("decoderDelete\\" + decoder.Id)" target="_blank">Delete</NavLink>
+                        <button class="btn btn-secondary" @onclick="() => Duplicate(decoder)">Duplicate</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <NavLink href="decoderAdd" target="_blank">Add...</NavLink>
+}
+
+@code {
+    private IList<MobileSFXBase> decoders;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        decoders = roster;
+    }
+    private void Duplicate(MobileSFXBase mobileDecoderBase)
+    {
+        var newmb = new MobileSFXBase(mobileDecoderBase,mobileDecoderBase.Logger);
+        while(newmb.Id<9999)
+        {
+            try
+            {
+                newmb.Id++;
+                decoders.Add(newmb);
+                break;
+            }catch(InvalidOperationException ex)
+            {
+                //conflict address
+            }
+        }         
+    }
+}

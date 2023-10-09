@@ -1,0 +1,87 @@
+﻿@page "/decoderadd"
+<PageTitle>Add Decoder</PageTitle>
+
+@using MRVirtualDCCSound.Core
+@inject RosterCollection roster
+@inject NavigationManager navmgr
+@inject GlobalSettings settings
+
+<h1>Add Decoder</h1>
+<p>Input the details for a sound decoder to pair with a locomotive address in your roster/on layout</p>
+
+@if (decoder == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @errormessage
+     <EditForm Model="@decoder" OnValidSubmit="@Save">
+        <CustomValidation @ref="customValidation" />
+        <ValidationSummary />
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Notes</th>
+                <th>Max RPM</th>
+                <th>SoundFolder</th>
+                <th>Control</th>
+            </tr>
+        </thead>
+        <tbody>
+       
+                <tr>
+                <td><input type="text" @bind="@decoder.Id"></td>
+                <td><input type="text" @bind="@decoder.Notes"></td>
+                <td><input type="number" @bind="@decoder.MaxRPM"></td>
+                <td>
+                    <InputSelect @bind-Value="@decoder.SoundsFolder">
+                        @foreach (var fldr in settings.SoundsFolders)
+                        {
+                            <option value="@fldr">@fldr</option>
+                        }
+                    </InputSelect>
+                </td>
+                    <td>
+                  <button class="btn btn-primary" @onclick="Save">Submit</button>
+                        <button class="btn btn-primary" @onclick="Cancel">Cancel</button>
+                    </td>                    
+                </tr>
+        </tbody>
+    </table>
+    </EditForm>
+}
+
+@code {
+
+    private MobileSFXBase decoder;
+    private string errormessage = "";
+    private CustomValidation? customValidation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        decoder = new MobileSFXBase();       
+    }
+
+    protected void Save()
+    {
+        try
+        {
+            roster.Add(decoder);
+            roster.Save();
+            navmgr.NavigateTo("roster");
+        }catch(Exception ex)
+        {
+            errormessage = ex.ToString();
+            if (ex is InvalidOperationException)
+            {
+                roster.Remove(decoder);
+            }
+        }
+    }
+    void Cancel()
+    {
+        navmgr.NavigateTo("roster");
+    }
+}

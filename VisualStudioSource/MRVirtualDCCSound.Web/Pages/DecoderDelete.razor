@@ -1,0 +1,72 @@
+﻿@page "/decoderdelete/{Id:int}"
+<PageTitle>Decoder Delete</PageTitle>
+
+@using MRVirtualDCCSound.Core
+@inject RosterCollection roster
+@inject NavigationManager navmgr
+@inject GlobalSettings settings
+
+<h1>Delete Decoder?</h1>
+<h1>User Id: @Id</h1>
+<p>Delete locomotive config from roster? @roster.StorageFilePath</p>
+
+@if (decoder == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @errormessage
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Notes</th>
+                <th>Max RPM</th>
+                <th>SoundFolder</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>     
+                <tr>
+                <td>@decoder.Id</td>
+                <td>@decoder.Notes</td>
+                <td>@decoder.MaxRPM"</td>
+                <td>@decoder.SoundsFolder</td>
+                    <td>
+                  <button class="btn btn-primary" @onclick="Delete">Confirm Delete</button>
+                    </td>                    
+                </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+    private MobileSFXBase decoder;
+    private string errormessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        decoder = roster.Where(x => x.Id == Id).FirstOrDefault();
+    }
+
+    protected async Task Delete()
+    {
+        try
+        {
+            roster.Remove(decoder);
+            roster.Save();
+            navmgr.NavigateTo("roster");
+        }catch(Exception ex)
+        {
+            errormessage = ex.ToString();
+        }
+    }
+    void Cancel()
+    {
+        navmgr.NavigateTo("roster");
+    }
+}
