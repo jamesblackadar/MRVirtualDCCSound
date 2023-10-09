@@ -1,2 +1,2 @@
-# MRSound
-A Model Railway Sound System primarily as applied to a DCC system
+# MRVirtualDCCSound
+A .NET PC sound system written for DCC model railways. 
